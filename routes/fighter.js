@@ -4,24 +4,29 @@ import { ObjectId } from "mongodb";
 
 const router = express.Router();
 
-// This section will help you get a list of all the records.
+//get all
 router.get("/", async (req, res) => {
   let collection = await db.collection("fighters");
   let results = await collection.find({}).toArray();
   res.send(results).status(200);
 });
 
-// This section will help you get a single record by id
+//get one by id
 router.get("/:id", async (req, res) => {
-  let collection = await db.collection("fighters");
-  let query = { _id: new ObjectId(req.params.id) };
-  let result = await collection.findOne(query);
+  try {
+    let collection = await db.collection("fighters");
+    let query = { _id: new ObjectId(req.params.id) };
+    let result = await collection.findOne(query);
 
-  if (!result) res.send("Not found").status(404);
-  else res.send(result).status(200);
+    if (!result) res.send("Not found").status(404);
+    else res.send(result).status(200);
+  } catch (error) {
+    console.log("Error : ", error);
+    return res.send("Not found").status(404);
+  }
 });
 
-// This section will help you create a new record.
+//add
 router.post("/", async (req, res) => {
   let newFighter = {
     age: req.body.age,
@@ -36,7 +41,7 @@ router.post("/", async (req, res) => {
   res.send(result).status(204);
 });
 
-// This section will help you update a record by id.
+//edit
 router.patch("/:id", async (req, res) => {
   const query = { _id: new ObjectId(req.params.id) };
   const updates = {
@@ -56,7 +61,7 @@ router.patch("/:id", async (req, res) => {
   res.send(result).status(200);
 });
 
-// This section will help you delete a record
+//delete by id
 router.delete("/:id", async (req, res) => {
   const query = { _id: new ObjectId(req.params.id) };
 
@@ -64,6 +69,23 @@ router.delete("/:id", async (req, res) => {
   let result = await collection.deleteOne(query);
 
   res.send(result).status(200);
+});
+
+//search fighters by name
+router.get("/search/:name", async (req, res) => {
+  const name = req.params.name;
+
+  const fighters = db.collection("fighters");
+
+  try {
+    const searchQuery = { fullName: { $regex: name, $options: "i" } };
+    const searchResults = await fighters.find(searchQuery).toArray();
+
+    res.json(searchResults);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 export default router;
