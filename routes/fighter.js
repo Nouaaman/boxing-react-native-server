@@ -35,6 +35,7 @@ router.post("/", async (req, res) => {
     picture: req.body.picture,
     record: req.body.record,
     weightclass: req.body.weightclass,
+    description:req.body.description
   };
   let collection = await db.collection("fighters");
   let result = await collection.insertOne(newFighter);
